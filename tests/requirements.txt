@@ -1,0 +1,7 @@
+moto>=3.0.7
+validators
+boto3
+pytest
+coverage
+aws_lambda_powertools
+coverage
