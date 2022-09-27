@@ -1,2 +1,3 @@
 aws-lambda-powertools
 pydantic
+boto3-stubs

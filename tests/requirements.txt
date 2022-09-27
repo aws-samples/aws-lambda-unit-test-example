@@ -5,3 +5,4 @@ pytest
 coverage
 aws_lambda_powertools
 coverage
+pytest-socket

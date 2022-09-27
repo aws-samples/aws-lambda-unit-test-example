@@ -3,7 +3,7 @@
 
 # Start of lambda handler code:  src/sampleLambda/schema.py
 
-INPUT = {
+INPUT_SCHEMA = {
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "http://example.com/example.json",
     "type": "object",
@@ -35,7 +35,7 @@ INPUT = {
     },
 }
 
-OUTPUT = {
+OUTPUT_SCHEMA = {
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "http://example.com/example.json",
     "type": "object",

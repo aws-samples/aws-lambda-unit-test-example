@@ -25,6 +25,7 @@ The code in this project is simplified - we’ve opted for concise snippets over
 ## Make commands
 The project Makefile contains helper commands for working with the project:
 * ```make createEnv```: Create a Python Virtual Envionment and install dependencies
+* ```make unittest```: Run a unit test, guarding for socket connections
 * ```make coverage```: Run unit tests and provide a coverage report
 * ```make deploy```: Deploy the stack to an AWS Account
 
