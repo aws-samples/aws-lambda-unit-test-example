@@ -36,7 +36,7 @@ class TestSampleLambda(TestCase):
         os.environ["DYNAMODB_TABLE_NAME"] = self.test_ddb_table_name
         os.environ["S3_BUCKET_NAME"] = self.test_s3_bucket_name 
         
-        # [3] Set up the services: construct a (mocked!) DynamoDB table
+        # [3a] Set up the services: construct a (mocked!) DynamoDB table
         dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
         dynamodb.create_table(
             TableName = self.test_ddb_table_name,
@@ -45,7 +45,7 @@ class TestSampleLambda(TestCase):
             BillingMode='PAY_PER_REQUEST'
             )
             
-        # [3] Set up the services: construct a (mocked!) S3 Bucket table    
+        # [3b] Set up the services: construct a (mocked!) S3 Bucket table    
         s3_client = boto3.client('s3', region_name="us-east-1")
         s3_client.create_bucket(Bucket = self.test_s3_bucket_name )
         

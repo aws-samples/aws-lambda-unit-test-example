@@ -10,11 +10,12 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 from aws_lambda_powertools.utilities.validation import validator
 
 
-# [1] Import the schema for the Lambda Powertools Validator
+# Import the schema for the Lambda Powertools Validator
 from schemas import INPUT_SCHEMA, OUTPUT_SCHEMA
 
-# [2] Define a LambdaResources class for Environment Vaiables and AWS Resource
-# connections.  Make initializing the resources optional for testing.
+# [1] Define a Global class an AWS Resource: Amazon DynamoDB. 
+# Initializing the resources is optional to enable testing.
+
 class LambdaDynamoDBClass:
     def __init__(self, initialize_resources: bool ):
         if initialize_resources:
@@ -22,6 +23,9 @@ class LambdaDynamoDBClass:
             self.table_name = environ["DYNAMODB_TABLE_NAME"]
             self.resource = resource('dynamodb')
             self.table = self.resource.Table(self.table_name)
+
+# [2] Define a Global class an AWS Resource: Amazon S3 bucket. 
+# Initializing the resources is optional to enable testing.
 
 class LambdaS3Class:
     def __init__(self, initialize_resources: bool ):
