@@ -63,27 +63,67 @@ class TestSampleLambda(TestCase):
                                                         "data":"Unit Test Customer"})
  
         # [6] Run DynamoDB to S3 file function
-        create_letter_in_s3(dynamo_db = self.test_LAMBDA_DYNAMODB, 
+        return_val = create_letter_in_s3(dynamo_db = self.test_LAMBDA_DYNAMODB, 
                             s3=self.test_LAMBDA_S3,
                             doc_type = "UnitTestDoc",
                             cust_id = "UnitTestCust"
                             )
 
-        # [7] Ensure the data was written to S3 correctly, with correct contents
+        # [7] Ensure the data was written to S3 correctly, with correct contents 
         body = self.test_LAMBDA_S3.bucket.Object("UnitTestCust/UnitTestDoc.txt").get()['Body'].read()
         
         # Test
+        self.assertEqual(return_val["statusCode"], 200)
+        self.assertIn("UnitTestCust/UnitTestDoc.txt", return_val["body"])
         self.assertEqual(body.decode('ascii'),"Dear Unit Test Customer;\nUnit Test Doc Corpi")
 
 
-    # [8] Load and validate test events from the file system
+    def test_create_letter_in_s3_doc_notfound(self) -> None:
+
+        # [8] Post test items to a mocked database
+        self.test_LAMBDA_DYNAMODB.table.put_item(Item={"PK":"D#UnitTestDoc", 
+                                                        "data":"Unit Test Doc Corpi"})
+        self.test_LAMBDA_DYNAMODB.table.put_item(Item={"PK":"C#UnitTestCust", 
+                                                        "data":"Unit Test Customer"})
+        
+        # [9] Run DynamoDB to S3 file function
+        return_val = create_letter_in_s3(dynamo_db = self.test_LAMBDA_DYNAMODB, 
+                            s3=self.test_LAMBDA_S3,
+                            doc_type = "NOTVALID",
+                            cust_id = "UnitTestCust"
+                            )                  
+
+        # Test
+        self.assertEqual(return_val["statusCode"], 404)
+        self.assertIn("NOTFOUND", return_val["body"])
+
+    def test_create_letter_in_s3_user_notfound(self) -> None:
+
+        # [10] Post test items to a mocked database
+        self.test_LAMBDA_DYNAMODB.table.put_item(Item={"PK":"D#UnitTestDoc", 
+                                                        "data":"Unit Test Doc Corpi"})
+        self.test_LAMBDA_DYNAMODB.table.put_item(Item={"PK":"C#UnitTestCust", 
+                                                        "data":"Unit Test Customer"})
+        
+        # [11] Run DynamoDB to S3 file function
+        return_val = create_letter_in_s3(dynamo_db = self.test_LAMBDA_DYNAMODB, 
+                            s3=self.test_LAMBDA_S3,
+                            doc_type = "UnitTestDoc",
+                            cust_id = "NOTVALID"
+                            )                  
+
+        # Test
+        self.assertEqual(return_val["statusCode"], 404)
+        self.assertIn("NOTFOUND", return_val["body"])
+
+    # [12] Load and validate test events from the file system
     def load_test_event(self, test_event_file_name: str) ->  dict:
         with open(f"tests/events/{test_event_file_name}.json") as f:
             event = json.load(f)
             validate(event=event, schema=INPUT_SCHEMA)
             return event
 
-    # [9] Patch the Global Class and any function calls
+    # [13] Patch the Global Class and any function calls
     @patch("src.sampleLambda.app._LAMBDA_DYNAMODB")
     @patch("src.sampleLambda.app._LAMBDA_S3")
     @patch("src.sampleLambda.app.create_letter_in_s3")
@@ -92,16 +132,16 @@ class TestSampleLambda(TestCase):
                             mock_lambda_s3 : MagicMock,
                             mock_lambda_dynamo_db : MagicMock):
                             
-        # [10] Test setup - Return a mock for the Global Var LAMBDA_GLOBAL
+        # [14] Test setup - Return a mock for the Global Var LAMBDA_GLOBAL
         mock_lambda_dynamo_db.return_value = self.test_LAMBDA_DYNAMODB
         mock_lambda_s3.return_value = self.test_LAMBDA_S3
         mock_create_letter_in_s3.return_value = {"statusCode" : 200, "body":"OK"}
         
-        # [11] Run Test using a test event from /tests/events/*.json
+        # [15] Run Test using a test event from /tests/events/*.json
         test_event = self.load_test_event("sampleEvent1")
         ret_val = lambda_handler(event=test_event, context=None)
         
-        # [12] Validate the function was called with the mocked globals
+        # [16] Validate the function was called with the mocked globals
         # and event values
         mock_create_letter_in_s3.assert_called_once_with( dynamo_db=mock_lambda_dynamo_db, 
                                         s3=mock_lambda_s3,

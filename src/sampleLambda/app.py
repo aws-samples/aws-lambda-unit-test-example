@@ -62,17 +62,29 @@ def create_letter_in_s3( dynamo_db: LambdaDynamoDBClass,
                          s3: LambdaS3Class,
                          doc_type: str,
                          cust_id: str) -> dict:
-                  
-    # [7] Use the passed environment class for AWS resource access - DynamoDB
-    cust_name = dynamo_db.table.get_item(Key={"PK": f"C#{cust_id}"})["Item"]["data"]
-    doc_text = dynamo_db.table.get_item(Key={"PK": f"D#{doc_type}"})["Item"]["data"]
 
-    # [8] Use the passed environment class for AWS resource access - S3
-    s3_file_key = f"{cust_id}/{doc_type}.txt"
-    s3.bucket.put_object(Key=s3_file_key, 
-                       Body=f"Dear {cust_name};\n{doc_text}".encode('utf-8'),
-                       ServerSideEncryption='AES256')
+    status_code = 200
+    body = "OK"
+    
+    try:         
+        # [7] Use the passed environment class for AWS resource access - DynamoDB
+        cust_name = dynamo_db.table.get_item(Key={"PK": f"C#{cust_id}"})["Item"]["data"]
+        doc_text = dynamo_db.table.get_item(Key={"PK": f"D#{doc_type}"})["Item"]["data"]
 
-    return {"statusCode": 200, "body" : f"OK {s3_file_key}" }
+        # [8] Use the passed environment class for AWS resource access - S3
+        s3_file_key = f"{cust_id}/{doc_type}.txt"
+        s3.bucket.put_object(Key=s3_file_key, 
+                        Body=f"Dear {cust_name};\n{doc_text}".encode('utf-8'),
+                        ServerSideEncryption='AES256')
+
+        body = f"{body} {s3_file_key}"
+    except KeyError as index_error:
+        body = "NOTFOUND: " + str(index_error)
+        status_code = 404
+    except Exception as other_error:                     
+        body = "ERROR: " + str(other_error)
+        status_code = 500
+    finally:
+        return {"statusCode": status_code, "body" : body }
 
 # End of lambda handler code
