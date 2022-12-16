@@ -79,7 +79,7 @@ def create_letter_in_s3( dynamo_db: LambdaDynamoDBClass,
 
         body = f"{body} {s3_file_key}"
     except KeyError as index_error:
-        body = "NOTFOUND: " + str(index_error)
+        body = "Not Found: " + str(index_error)
         status_code = 404
     except Exception as other_error:                     
         body = "ERROR: " + str(other_error)

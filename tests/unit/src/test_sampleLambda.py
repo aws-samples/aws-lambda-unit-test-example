@@ -95,7 +95,7 @@ class TestSampleLambda(TestCase):
 
         # Test
         self.assertEqual(return_val["statusCode"], 404)
-        self.assertIn("NOTFOUND", return_val["body"])
+        self.assertIn("Not Found", return_val["body"])
 
     def test_create_letter_in_s3_user_notfound(self) -> None:
 
@@ -114,7 +114,7 @@ class TestSampleLambda(TestCase):
 
         # Test
         self.assertEqual(return_val["statusCode"], 404)
-        self.assertIn("NOTFOUND", return_val["body"])
+        self.assertIn("Not Found", return_val["body"])
 
     # [12] Load and validate test events from the file system
     def load_test_event(self, test_event_file_name: str) ->  dict:
