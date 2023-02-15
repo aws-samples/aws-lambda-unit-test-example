@@ -7,16 +7,20 @@ createEnv: checkOSDependencies
 	source ./venv/bin/activate && pip3 install -r tests/requirements.txt
 
 coverage:
-	coverage run -m unittest discover
-	coverage html --omit "tests/*",".venv/*"
+	source ./venv/bin/activate &&  coverage run -m unittest discover
+	source ./venv/bin/activate &&  coverage html --omit "tests/*",".venv/*"
 
 unittest:
-	pytest --disable-socket tests/unit/src/test_sampleLambda.py -s tests/unit/src/
+	source ./venv/bin/activate &&  pytest -v --disable-socket -s tests/unit/src/
 
 deploy:
-	sam build
-	sam deploy --guided
+	source ./venv/bin/activate &&  sam build
+	source ./venv/bin/activate &&  sam deploy
+
+deploy.guided:
+	source ./venv/bin/activate &&  sam build
+	source ./venv/bin/activate &&  sam deploy --guided
 
 scan:
-	cfn_nag_scan --input-path template.yaml
-	bandit src/sampleLambda/*.py tests/unit/src/*.py
+	source ./venv/bin/activate &&  cfn_nag_scan --input-path template.yaml
+	source ./venv/bin/activate &&  pylint src/sample_lambda/*.py tests/unit/src/*.py

@@ -1,8 +1,10 @@
+"""
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
+"""
 
 # Start of lambda handler code:  src/sampleLambda/app.py
-from os import environ, getenv
+from os import environ
 from typing import Any, Dict
 from boto3 import resource
 from aws_lambda_powertools.utilities.data_classes import APIGatewayProxyEvent
@@ -17,71 +19,87 @@ from schemas import INPUT_SCHEMA, OUTPUT_SCHEMA
 # Initializing the resources is optional to enable testing.
 
 class LambdaDynamoDBClass:
-    def __init__(self, initialize_resources: bool ):
-        if initialize_resources:
-            # Initialize a DynamoDB Resource
-            self.table_name = environ["DYNAMODB_TABLE_NAME"]
-            self.resource = resource('dynamodb')
-            self.table = self.resource.Table(self.table_name)
+    """
+    AWS S3 Resource Class
+    """
+    def __init__(self, boto3_dynamodb_resource):
+        """
+        Initialize a DynamoDB Resource
+        """
+        self.resource = boto3_dynamodb_resource
+        self.table_name = environ["DYNAMODB_TABLE_NAME"]
+        self.table = self.resource.Table(self.table_name)
 
-# [2] Define a Global class an AWS Resource: Amazon S3 bucket. 
+# [2] Define a Global class an AWS Resource: Amazon S3 bucket.
 # Initializing the resources is optional to enable testing.
 
 class LambdaS3Class:
-    def __init__(self, initialize_resources: bool ):
-        if initialize_resources:
-            # Initialize an S3 Resource
-            self.bucket_name = environ["S3_BUCKET_NAME"]
-            self.resource = resource('s3')
-            self.bucket = self.resource.Bucket(self.bucket_name)
+    """
+    AWS S3 Resource Class
+    """
+    def __init__(self, boto3_s3_resource):  
+        """
+        Initialize an S3 Resource
+        """
+        self.resource = boto3_s3_resource
+        self.bucket_name = environ["S3_BUCKET_NAME"]
+        self.bucket = self.resource.Bucket(self.bucket_name)
 
 
 # [3] Globally scoped resources: created only if running in a Lambda runtime
-_LAMBDA_DYNAMODB = LambdaDynamoDBClass(initialize_resources = 
-                          getenv("LAMBDA_TASK_ROOT", None) != None
-                          )
-_LAMBDA_S3 = LambdaS3Class(initialize_resources = 
-                          getenv("LAMBDA_TASK_ROOT", None) != None
-                          )
+_LAMBDA_DYNAMODB_RESOURCE = resource('dynamodb')
+_LAMBDA_S3_RESOURCE = resource('s3')
 
 # [4] Validate the event schema and return schema using Lambda Power Tools
 @validator(inbound_schema=INPUT_SCHEMA, outbound_schema=OUTPUT_SCHEMA)
 def lambda_handler(event: APIGatewayProxyEvent, context: LambdaContext) -> Dict[str, Any]:
+    """
+    Lambda Entry Point
+    """
 
-    # [5] Use the Global variable
-    global _LAMBDA_DYNAMODB
-    global _LAMBDA_S3
- 
-    # [6] Explicitly pass the global to subsequent functions
-    return create_letter_in_s3(dynamo_db = _LAMBDA_DYNAMODB,
-                            s3 = _LAMBDA_S3,
-                            doc_type = event["pathParameters"]["docType"],
-                            cust_id = event["pathParameters"]["customerId"])
+    # [5] Use the Global variables to optimize AWS resource connections
+    global _LAMBDA_DYNAMODB_RESOURCE
+    global _LAMBDA_S3_RESOURCE
+
+    dynamodb_dependency = LambdaDynamoDBClass(_LAMBDA_DYNAMODB_RESOURCE)
+    s3_dependency = LambdaS3Class(_LAMBDA_S3_RESOURCE)
+
+    # [6] Explicitly pass the global resource to subsequent functions
+    return create_letter_in_s3(
+            dynamo_db = dynamodb_dependency,
+            s3 = s3_dependency,
+            doc_type = event["pathParameters"]["docType"],
+            cust_id = event["pathParameters"]["customerId"])
 
 def create_letter_in_s3( dynamo_db: LambdaDynamoDBClass,
                          s3: LambdaS3Class,
                          doc_type: str,
                          cust_id: str) -> dict:
 
+    """
+    Given a document type and a customer id, create a text document in S3
+    Document contents and customer name are retrieved from DynamoDB
+    """
+
     status_code = 200
     body = "OK"
     
     try:         
         # [7] Use the passed environment class for AWS resource access - DynamoDB
-        cust_name = dynamo_db.table.get_item(Key={"PK": f"C#{cust_id}"})["Item"]["data"]
-        doc_text = dynamo_db.table.get_item(Key={"PK": f"D#{doc_type}"})["Item"]["data"]
+        customer_name = dynamo_db.table.get_item(Key={"PK": f"C#{cust_id}"})["Item"]["data"]
+        document_text = dynamo_db.table.get_item(Key={"PK": f"D#{doc_type}"})["Item"]["data"]
 
         # [8] Use the passed environment class for AWS resource access - S3
         s3_file_key = f"{cust_id}/{doc_type}.txt"
         s3.bucket.put_object(Key=s3_file_key, 
-                        Body=f"Dear {cust_name};\n{doc_text}".encode('utf-8'),
+                        Body=f"Dear {customer_name};\n{document_text}".encode('utf-8'),
                         ServerSideEncryption='AES256')
 
         body = f"{body} {s3_file_key}"
     except KeyError as index_error:
         body = "Not Found: " + str(index_error)
         status_code = 404
-    except Exception as other_error:                     
+    except Exception as other_error:               
         body = "ERROR: " + str(other_error)
         status_code = 500
     finally:
