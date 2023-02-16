@@ -51,7 +51,7 @@ The project Makefile contains helper commands for working with the project:
 ├── doc                            
 │   └── architecture.png              # README images
 ├── src
-│   └── sampleLambda
+│   └── sample_lambda
 │       ├── app.py                    # Example AWS Lambda Handler
 │       ├── schemas.py                # Lambda Event and response schema definitions 
 │       └── requirements.txt          # Lambda python requirements
