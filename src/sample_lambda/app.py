@@ -57,10 +57,13 @@ def lambda_handler(event: APIGatewayProxyEvent, context: LambdaContext) -> Dict[
     global _LAMBDA_DYNAMODB_RESOURCE
     global _LAMBDA_S3_RESOURCE
 
+    dynamodb_resource_class = LambdaDynamoDBClass(_LAMBDA_DYNAMODB_RESOURCE)
+    s3_resource_class = LambdaS3Class(_LAMBDA_S3_RESOURCE)
+
     # [6] Explicitly pass the global resource to subsequent functions
     return create_letter_in_s3(
-            dynamo_db = LambdaDynamoDBClass(_LAMBDA_DYNAMODB_RESOURCE),
-            s3 = LambdaS3Class(_LAMBDA_S3_RESOURCE),
+            dynamo_db = dynamodb_resource_class,
+            s3 = s3_resource_class,
             doc_type = event["pathParameters"]["docType"],
             cust_id = event["pathParameters"]["customerId"])
 
