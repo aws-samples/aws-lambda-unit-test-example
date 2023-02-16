@@ -115,7 +115,7 @@ class TestSampleLambda(TestCase):
         self.assertEqual(test_return_value["statusCode"], 404)
         self.assertIn("Not Found", test_return_value["body"])
 
-    def test_create_letter_in_s3_user_notfound_404(self) -> None:
+    def test_create_letter_in_s3_customer_notfound_404(self) -> None:
         """
         Verify given a user id not present in the data table, a 404 error is returned.
         """
