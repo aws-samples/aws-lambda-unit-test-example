@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT-0
 """
 
-# Start of lambda handler code:  src/sampleLambda/app.py
+# Start of Lambda handler code:  src/sample_lambda/app.py
 from os import environ
 from typing import Any, Dict
 from boto3 import resource
@@ -21,7 +21,7 @@ _LAMBDA_DYNAMODB_RESOURCE = { "resource" : resource('dynamodb'),
 _LAMBDA_S3_RESOURCE = { "resource" : resource('s3'), 
                         "bucket_name" : environ.get("S3_BUCKET_NAME","NONE") }
 
-# [2] Define a Global class an AWS Resource: Amazon DynamoDB. 
+# [2] Define a Global class an AWS Resource: Amazon DynamoDB.
 class LambdaDynamoDBClass:
     """
     AWS DynamoDB Resource Class
@@ -39,7 +39,7 @@ class LambdaS3Class:
     """
     AWS S3 Resource Class
     """
-    def __init__(self, lambda_s3_resource):  
+    def __init__(self, lambda_s3_resource):
         """
         Initialize an S3 Resource
         """
@@ -47,7 +47,7 @@ class LambdaS3Class:
         self.bucket_name = lambda_s3_resource["bucket_name"]
         self.bucket = self.resource.Bucket(self.bucket_name)
 
-# [4] Validate the event schema and return schema using Lambda Power Tools
+# [4] Validate the event schema and return schema using Lambda Powertools
 @validator(inbound_schema=INPUT_SCHEMA, outbound_schema=OUTPUT_SCHEMA)
 def lambda_handler(event: APIGatewayProxyEvent, context: LambdaContext) -> Dict[str, Any]:
     """
@@ -79,15 +79,15 @@ def create_letter_in_s3( dynamo_db: LambdaDynamoDBClass,
 
     status_code = 200
     body = "OK"
-    
-    try:         
+
+    try:
         # [7] Use the passed environment class for AWS resource access - DynamoDB
         customer_name = dynamo_db.table.get_item(Key={"PK": f"C#{cust_id}"})["Item"]["data"]
         document_text = dynamo_db.table.get_item(Key={"PK": f"D#{doc_type}"})["Item"]["data"]
 
         # [8] Use the passed environment class for AWS resource access - S3
         s3_file_key = f"{cust_id}/{doc_type}.txt"
-        s3.bucket.put_object(Key=s3_file_key, 
+        s3.bucket.put_object(Key=s3_file_key,
                         Body=f"Dear {customer_name};\n{document_text}".encode('utf-8'),
                         ServerSideEncryption='AES256')
 
@@ -101,4 +101,4 @@ def create_letter_in_s3( dynamo_db: LambdaDynamoDBClass,
     finally:
         return {"statusCode": status_code, "body" : body }
 
-# End of lambda handler code
+# End of Lambda handler code

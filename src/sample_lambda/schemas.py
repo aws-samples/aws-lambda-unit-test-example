@@ -2,7 +2,7 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
 
-# Start of lambda schema definition code:  src/sampleLambda/schema.py
+# Start of schema definition code:  src/sample_lambda/schema.py
 """
 
 INPUT_SCHEMA = {
