@@ -10,21 +10,19 @@ import os
 import json
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
-import boto3
+from boto3 import resource, client
 import moto
 from aws_lambda_powertools.utilities.validation import validate
 
-# Import the Globals, Classes, Schemas, and Functions from the Lambda Handler
+# [0] Import the Globals, Classes, Schemas, and Functions from the Lambda Handler
 sys.path.append('./src/sample_lambda')
 from src.sample_lambda.app import LambdaDynamoDBClass, LambdaS3Class   # pylint: disable=wrong-import-position
 from src.sample_lambda.app import lambda_handler, create_letter_in_s3  # pylint: disable=wrong-import-position
 from src.sample_lambda.schemas import INPUT_SCHEMA                     # pylint: disable=wrong-import-position
 
-
 # [1] Mock all AWS Services in use
 @moto.mock_dynamodb
 @moto.mock_s3
-
 class TestSampleLambda(TestCase):
     """
     Test class for the application sample AWS Lambda Function
@@ -43,7 +41,7 @@ class TestSampleLambda(TestCase):
         os.environ["S3_BUCKET_NAME"] = self.test_s3_bucket_name
 
         # [3a] Set up the services: construct a (mocked!) DynamoDB table
-        dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
+        dynamodb = resource("dynamodb", region_name="us-east-1")
         dynamodb.create_table(
             TableName = self.test_ddb_table_name,
             KeySchema=[{"AttributeName": "PK", "KeyType": "HASH"}],
@@ -52,12 +50,16 @@ class TestSampleLambda(TestCase):
             )
 
         # [3b] Set up the services: construct a (mocked!) S3 Bucket table
-        s3_client = boto3.client('s3', region_name="us-east-1")
+        s3_client = client('s3', region_name="us-east-1")
         s3_client.create_bucket(Bucket = self.test_s3_bucket_name )
 
         # [4] Establish the "GLOBAL" environment for use in tests.
-        mocked_dynamodb_resource = boto3.resource("dynamodb")
-        mocked_s3_resource = boto3.resource("s3")
+        mocked_dynamodb_resource = resource("dynamodb")
+        mocked_s3_resource = resource("s3")
+        mocked_dynamodb_resource = { "resource" : resource('dynamodb'),
+                                     "table_name" : self.test_ddb_table_name  }
+        mocked_s3_resource = { "resource" : resource('s3'),
+                               "bucket_name" : self.test_s3_bucket_name }
         self.mocked_dynamodb_class = LambdaDynamoDBClass(mocked_dynamodb_resource)
         self.mocked_s3_class = LambdaS3Class(mocked_s3_resource)
 
@@ -113,9 +115,9 @@ class TestSampleLambda(TestCase):
         self.assertEqual(test_return_value["statusCode"], 404)
         self.assertIn("Not Found", test_return_value["body"])
 
-    def test_create_letter_in_s3_customer_notfound_404(self) -> None:
+    def test_create_letter_in_s3_user_notfound_404(self) -> None:
         """
-        Verify given a customer id not present in the data table, a 404 error is returned.
+        Verify given a user id not present in the data table, a 404 error is returned.
         """
 
         # [10] Post test items to a mocked database
@@ -186,14 +188,14 @@ class TestSampleLambda(TestCase):
     def tearDown(self) -> None:
 
         # [13] Remove (mocked!) S3 Objects and Bucket
-        s3_resource = boto3.resource("s3",region_name="us-east-1")
+        s3_resource = resource("s3",region_name="us-east-1")
         s3_bucket = s3_resource.Bucket( self.test_s3_bucket_name )
         for key in s3_bucket.objects.all():
             key.delete()
         s3_bucket.delete()
 
         # [14] Remove (mocked!) DynamoDB Table
-        dynamodb_resource = boto3.client("dynamodb", region_name="us-east-1")
+        dynamodb_resource = client("dynamodb", region_name="us-east-1")
         dynamodb_resource.delete_table(TableName = self.test_ddb_table_name )
 
 # End of unit test code

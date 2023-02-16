@@ -28,10 +28,13 @@ The project Makefile contains helper commands for working with the project:
 * ```make unittest```: Run a unit test, guarding for socket connections
 * ```make coverage```: Run unit tests and provide a coverage report
 * ```make deploy```: Deploy the stack to an AWS Account
-
+* ```make deploy.guided```: Deploy the stack to an AWS Account, prompting for stack parameters
+* 
 ---
 ## Running the project
-* To deploy the project, deploy the project using the ```make deploy``` command.
+* First, create the Python Virtual Environment by using the ```make createEnv``` command.
+* Run the unit tests with the ```make unittest``` command.
+* To deploy the project, deploy the project using the ```make deploy.guided``` command.
 * Once deployed, locate the DynamoDB Table created and add two records:
   * ```{ "PK" : "C#TestCustomer", "data" : "Testing Customer"}```
   * ```{ "PK" : "D#Welcome", "data" : "\nHello and Welcome!\n"}```

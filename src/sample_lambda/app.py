@@ -11,44 +11,42 @@ from aws_lambda_powertools.utilities.data_classes import APIGatewayProxyEvent
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from aws_lambda_powertools.utilities.validation import validator
 
-
 # Import the schema for the Lambda Powertools Validator
 from schemas import INPUT_SCHEMA, OUTPUT_SCHEMA
 
 # [1] Define a Global class an AWS Resource: Amazon DynamoDB. 
-# Initializing the resources is optional to enable testing.
-
 class LambdaDynamoDBClass:
     """
-    AWS S3 Resource Class
+    AWS DynamoDB Resource Class
     """
-    def __init__(self, boto3_dynamodb_resource):
+    def __init__(self, lambda_dynamodb_resource):
         """
         Initialize a DynamoDB Resource
         """
-        self.resource = boto3_dynamodb_resource
-        self.table_name = environ["DYNAMODB_TABLE_NAME"]
+        self.resource = lambda_dynamodb_resource["resource"]
+        self.table_name = lambda_dynamodb_resource["table_name"]
         self.table = self.resource.Table(self.table_name)
 
 # [2] Define a Global class an AWS Resource: Amazon S3 bucket.
-# Initializing the resources is optional to enable testing.
-
 class LambdaS3Class:
     """
     AWS S3 Resource Class
     """
-    def __init__(self, boto3_s3_resource):  
+    def __init__(self, lambda_s3_resource):  
         """
         Initialize an S3 Resource
         """
-        self.resource = boto3_s3_resource
-        self.bucket_name = environ["S3_BUCKET_NAME"]
+        self.resource = lambda_s3_resource["resource"]
+        self.bucket_name = lambda_s3_resource["bucket_name"]
         self.bucket = self.resource.Bucket(self.bucket_name)
 
 
-# [3] Globally scoped resources: created only if running in a Lambda runtime
-_LAMBDA_DYNAMODB_RESOURCE = resource('dynamodb')
-_LAMBDA_S3_RESOURCE = resource('s3')
+# [3] Globally scoped resources
+# Initialize the resources once per Lambda execution environment by using global scope.
+_LAMBDA_DYNAMODB_RESOURCE = { "resource" : resource('dynamodb'), 
+                              "table_name" : environ.get("DYNAMODB_TABLE_NAME","NONE") }
+_LAMBDA_S3_RESOURCE = { "resource" : resource('s3'), 
+                        "bucket_name" : environ.get("S3_BUCKET_NAME","NONE") }
 
 # [4] Validate the event schema and return schema using Lambda Power Tools
 @validator(inbound_schema=INPUT_SCHEMA, outbound_schema=OUTPUT_SCHEMA)
@@ -56,18 +54,14 @@ def lambda_handler(event: APIGatewayProxyEvent, context: LambdaContext) -> Dict[
     """
     Lambda Entry Point
     """
-
     # [5] Use the Global variables to optimize AWS resource connections
     global _LAMBDA_DYNAMODB_RESOURCE
     global _LAMBDA_S3_RESOURCE
 
-    dynamodb_dependency = LambdaDynamoDBClass(_LAMBDA_DYNAMODB_RESOURCE)
-    s3_dependency = LambdaS3Class(_LAMBDA_S3_RESOURCE)
-
     # [6] Explicitly pass the global resource to subsequent functions
     return create_letter_in_s3(
-            dynamo_db = dynamodb_dependency,
-            s3 = s3_dependency,
+            dynamo_db = LambdaDynamoDBClass(_LAMBDA_DYNAMODB_RESOURCE),
+            s3 = LambdaS3Class(_LAMBDA_S3_RESOURCE),
             doc_type = event["pathParameters"]["docType"],
             cust_id = event["pathParameters"]["customerId"])
 
