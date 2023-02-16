@@ -14,7 +14,14 @@ from aws_lambda_powertools.utilities.validation import validator
 # Import the schema for the Lambda Powertools Validator
 from schemas import INPUT_SCHEMA, OUTPUT_SCHEMA
 
-# [1] Define a Global class an AWS Resource: Amazon DynamoDB. 
+# [1] Globally scoped resources
+# Initialize the resources once per Lambda execution environment by using global scope.
+_LAMBDA_DYNAMODB_RESOURCE = { "resource" : resource('dynamodb'), 
+                              "table_name" : environ.get("DYNAMODB_TABLE_NAME","NONE") }
+_LAMBDA_S3_RESOURCE = { "resource" : resource('s3'), 
+                        "bucket_name" : environ.get("S3_BUCKET_NAME","NONE") }
+
+# [2] Define a Global class an AWS Resource: Amazon DynamoDB. 
 class LambdaDynamoDBClass:
     """
     AWS DynamoDB Resource Class
@@ -27,7 +34,7 @@ class LambdaDynamoDBClass:
         self.table_name = lambda_dynamodb_resource["table_name"]
         self.table = self.resource.Table(self.table_name)
 
-# [2] Define a Global class an AWS Resource: Amazon S3 bucket.
+# [3] Define a Global class an AWS Resource: Amazon S3 bucket.
 class LambdaS3Class:
     """
     AWS S3 Resource Class
@@ -39,14 +46,6 @@ class LambdaS3Class:
         self.resource = lambda_s3_resource["resource"]
         self.bucket_name = lambda_s3_resource["bucket_name"]
         self.bucket = self.resource.Bucket(self.bucket_name)
-
-
-# [3] Globally scoped resources
-# Initialize the resources once per Lambda execution environment by using global scope.
-_LAMBDA_DYNAMODB_RESOURCE = { "resource" : resource('dynamodb'), 
-                              "table_name" : environ.get("DYNAMODB_TABLE_NAME","NONE") }
-_LAMBDA_S3_RESOURCE = { "resource" : resource('s3'), 
-                        "bucket_name" : environ.get("S3_BUCKET_NAME","NONE") }
 
 # [4] Validate the event schema and return schema using Lambda Power Tools
 @validator(inbound_schema=INPUT_SCHEMA, outbound_schema=OUTPUT_SCHEMA)
