@@ -1,70 +1,18 @@
 # AWS Lambda - Unit Test Example
 
-## Project Architecture
+## New Location
 
-The project consists of an Amazon API Gateway, an AWS Lambda function, a DynamoDB Table, and an S3 bucket.  Although this project can be deployed, the focus of the code is to demonstrate unit testing approaches using Python.
+This repository has been relocated the the AWS Serverless Test Samples Repository.
 
-![Architecture](doc/architecture.png)
-
-An API Gatway path [1] triggers an AWS Lambda function [2] that retrieves a data from a DynamoDB [3] table and writes data to a object on Amazon S3 [4].  The API path contains a Document Type and a Customer ID.  The Lambda function retrieves both the Document Type data and Customer ID data and combines them, writing the data to S3 and returning the object key [1].  The DynamoDB table name and the S3 bucket name are provided to the Lambda function via environment variables.  
-
-The DynamoDB table schema is comprised of a Partition Key (PK) for looking up a given item, and a “data” field containing string contents.  Document Type Items are prefixed with D#, and Customer items have a PK prefixed with C#.
-
----
-## Code Note:
-The code in this project is simplified - we’ve opted for concise snippets over fully completed or PEP8 compliant production code.
-
----
-## Prerequisites:
-* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-* [AWS Serverless Application Model (SAM) CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
-* [Python 3.9](https://www.python.org/downloads/)
-* [Make build utility](https://www.gnu.org/software/make/)
-
----
-## Make commands
-The project Makefile contains helper commands for working with the project:
-* ```make createEnv```: Create a Python Virtual Envionment and install dependencies
-* ```make unittest```: Run a unit test, guarding for socket connections
-* ```make coverage```: Run unit tests and provide a coverage report
-* ```make deploy```: Deploy the stack to an AWS Account
-* ```make deploy.guided```: Deploy the stack to an AWS Account, prompting for stack parameters
-* 
----
-## Running the project
-* First, create the Python Virtual Environment by using the ```make createEnv``` command.
-* Run the unit tests with the ```make unittest``` command.
-* To deploy the project, deploy the project using the ```make deploy.guided``` command.
-* Once deployed, locate the DynamoDB Table created and add two records:
-  * ```{ "PK" : "C#TestCustomer", "data" : "Testing Customer"}```
-  * ```{ "PK" : "D#Welcome", "data" : "\nHello and Welcome!\n"}```
-* As authentication is not configured, you can test the endpoint using the API Gateway service in the AWs Console:
-*  ```https://{region}.console.aws.amazon.com/apigateway```  
-
----
-## Project Structure
-
-```
-.
-├── Makefile                          # Sample project commands
-├── README.md                         # This file
-├── doc                            
-│   └── architecture.png              # README images
-├── src
-│   └── sample_lambda
-│       ├── app.py                    # Example AWS Lambda Handler
-│       ├── schemas.py                # Lambda Event and response schema definitions 
-│       └── requirements.txt          # Lambda python requirements
-├── template.yaml                     # SAM Deployment Script
-└── tests
-    ├── requirements.txt              # Unit test python requirements
-    ├── events                        
-    │   └── SampleEvent1.json         # Sample Events for Testing
-    └── unit
-        └── src
-            └── test_sampleLambda.py  # Unit test - Lambda Handler
-
-```
+* Click this link for the new location:  
+  * [Test AWS Lambda function handlers locally using mocks](https://github.com/aws-samples/serverless-test-samples/tree/main/python-test-samples/lambda-mock)
+* The companion document is available on the AWS DevOps Blog: 
+  * [Unit Testing AWS Lambda with Python and Mock AWS Services](https://aws.amazon.com/blogs/devops/unit-testing-aws-lambda-with-python-and-mock-aws-services/) 
+* Click this link for more examples in Python: 
+  * [Python AWS Lambda Test Examples](https://github.com/aws-samples/serverless-test-samples/tree/main/python-test-samples)
+* Additional Testing Resources:
+  * [Serverlessland Testing Resources](https://serverlessland.com/testing)
+  * [AWS Code Samples Test Repository](https://github.com/aws-samples/serverless-test-samples)
 
 ## License
 
